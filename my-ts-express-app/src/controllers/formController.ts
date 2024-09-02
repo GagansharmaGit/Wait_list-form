@@ -3,8 +3,19 @@ import FormEntry from '../MongoModels/FormModel';
 
 export const getFormEntries = async (req: Request, res: Response) => {
   try {
-    const formEntries = await FormEntry.find();
-    res.status(200).json(formEntries);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const formEntries = await FormEntry.find().skip(skip).limit(limit);
+    const totalEntries = await FormEntry.countDocuments();
+
+    res.status(200).json({
+      data: formEntries,
+      currentPage: page,
+      totalPages: Math.ceil(totalEntries / limit),
+      totalEntries
+    });
   } catch (err) {
     res.status(500).json({ error: err });
   }
